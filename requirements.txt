@@ -11,6 +11,9 @@ pandas>=2.0.0
 faiss-cpu>=1.7.4
 chromadb>=0.4.0
 
+# Caching
+redis>=5.0.0
+
 # Backend
 fastapi>=0.104.0
 uvicorn[standard]>=0.24.0
@@ -21,6 +24,7 @@ python-dotenv>=1.0.0
 # Frontend
 streamlit>=1.28.0
 requests>=2.31.0
+plotly>=5.17.0
 
 # Data Processing
 opencv-python>=4.8.0

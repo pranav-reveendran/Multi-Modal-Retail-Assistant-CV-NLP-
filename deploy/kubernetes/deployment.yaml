@@ -1,0 +1,147 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: retail-assistant-backend
+  labels:
+    app: retail-assistant
+    component: backend
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: retail-assistant
+      component: backend
+  template:
+    metadata:
+      labels:
+        app: retail-assistant
+        component: backend
+    spec:
+      containers:
+      - name: backend
+        image: your-registry/retail-assistant-backend:latest
+        ports:
+        - containerPort: 8000
+          name: http
+        env:
+        - name: VECTOR_DB_PATH
+          value: "/data/vector_db"
+        - name: CLIP_MODEL_NAME
+          value: "clip-ViT-B-32"
+        - name: USE_CACHE
+          value: "true"
+        - name: USE_RERANKING
+          value: "false"
+        - name: REDIS_HOST
+          value: "redis-service"
+        - name: REDIS_PORT
+          value: "6379"
+        resources:
+          requests:
+            memory: "4Gi"
+            cpu: "2"
+          limits:
+            memory: "8Gi"
+            cpu: "4"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 60
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 30
+          periodSeconds: 5
+        volumeMounts:
+        - name: data-volume
+          mountPath: /data
+      volumes:
+      - name: data-volume
+        persistentVolumeClaim:
+          claimName: retail-data-pvc
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: retail-assistant-frontend
+  labels:
+    app: retail-assistant
+    component: frontend
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: retail-assistant
+      component: frontend
+  template:
+    metadata:
+      labels:
+        app: retail-assistant
+        component: frontend
+    spec:
+      containers:
+      - name: frontend
+        image: your-registry/retail-assistant-frontend:latest
+        ports:
+        - containerPort: 8501
+          name: http
+        env:
+        - name: API_URL
+          value: "http://retail-assistant-backend:8000"
+        resources:
+          requests:
+            memory: "1Gi"
+            cpu: "0.5"
+          limits:
+            memory: "2Gi"
+            cpu: "1"
+        volumeMounts:
+        - name: data-volume
+          mountPath: /data
+          readOnly: true
+      volumes:
+      - name: data-volume
+        persistentVolumeClaim:
+          claimName: retail-data-pvc
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: redis
+  labels:
+    app: retail-assistant
+    component: cache
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: retail-assistant
+      component: cache
+  template:
+    metadata:
+      labels:
+        app: retail-assistant
+        component: cache
+    spec:
+      containers:
+      - name: redis
+        image: redis:7-alpine
+        ports:
+        - containerPort: 6379
+          name: redis
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "0.25"
+          limits:
+            memory: "512Mi"
+            cpu: "0.5"
+        volumeMounts:
+        - name: redis-data
+          mountPath: /data
+      volumes:
+      - name: redis-data
+        emptyDir: {}

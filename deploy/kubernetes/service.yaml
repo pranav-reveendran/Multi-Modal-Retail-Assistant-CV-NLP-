@@ -1,0 +1,53 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: retail-assistant-backend
+  labels:
+    app: retail-assistant
+    component: backend
+spec:
+  type: ClusterIP
+  ports:
+  - port: 8000
+    targetPort: 8000
+    protocol: TCP
+    name: http
+  selector:
+    app: retail-assistant
+    component: backend
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: retail-assistant-frontend
+  labels:
+    app: retail-assistant
+    component: frontend
+spec:
+  type: LoadBalancer
+  ports:
+  - port: 80
+    targetPort: 8501
+    protocol: TCP
+    name: http
+  selector:
+    app: retail-assistant
+    component: frontend
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis-service
+  labels:
+    app: retail-assistant
+    component: cache
+spec:
+  type: ClusterIP
+  ports:
+  - port: 6379
+    targetPort: 6379
+    protocol: TCP
+    name: redis
+  selector:
+    app: retail-assistant
+    component: cache

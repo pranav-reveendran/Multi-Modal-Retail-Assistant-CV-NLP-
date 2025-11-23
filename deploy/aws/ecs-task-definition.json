@@ -1,0 +1,61 @@
+{
+  "family": "retail-assistant-backend",
+  "networkMode": "awsvpc",
+  "requiresCompatibilities": ["FARGATE"],
+  "cpu": "2048",
+  "memory": "8192",
+  "containerDefinitions": [
+    {
+      "name": "backend",
+      "image": "YOUR_ECR_URI/retail-assistant-backend:latest",
+      "portMappings": [
+        {
+          "containerPort": 8000,
+          "protocol": "tcp"
+        }
+      ],
+      "environment": [
+        {
+          "name": "VECTOR_DB_PATH",
+          "value": "/data/vector_db"
+        },
+        {
+          "name": "CLIP_MODEL_NAME",
+          "value": "clip-ViT-B-32"
+        },
+        {
+          "name": "USE_CACHE",
+          "value": "true"
+        },
+        {
+          "name": "REDIS_HOST",
+          "value": "your-redis-endpoint.cache.amazonaws.com"
+        }
+      ],
+      "mountPoints": [
+        {
+          "sourceVolume": "data-volume",
+          "containerPath": "/data",
+          "readOnly": false
+        }
+      ],
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "/ecs/retail-assistant-backend",
+          "awslogs-region": "us-east-1",
+          "awslogs-stream-prefix": "ecs"
+        }
+      }
+    }
+  ],
+  "volumes": [
+    {
+      "name": "data-volume",
+      "efsVolumeConfiguration": {
+        "fileSystemId": "fs-XXXXXXXX",
+        "transitEncryption": "ENABLED"
+      }
+    }
+  ]
+}
